@@ -6,10 +6,6 @@
       "use": "@vercel/node"
     },
     {
-      "src": "*.html",
-      "use": "@vercel/static"
-    },
-    {
       "src": "tampilan-public/**",
       "use": "@vercel/static"
     },
@@ -56,11 +52,7 @@
       "dest": "/js/$1"
     },
     {
-      "src": "/",
-      "dest": "/tampilan-public/index.html"
-    },
-    {
-      "src": "/tampilan-public/(.*)",
+      "src": "/(.*)",
       "dest": "/tampilan-public/$1"
     }
   ]
