@@ -1,13 +1,21 @@
 {
-    "version": 2,
-    "builds": [
-     {
+  "version": 2,
+  "rewrites": [
+    {
       "source": "/api/(.*)",
       "destination": "/backend/index.js"
+    },
+    {
+      "source": "/css/(.*)",
+      "destination": "/css/$1"
+    },
+    {
+      "source": "/js/(.*)",
+      "destination": "/js/$1"
     },
     {
       "source": "/(.*)",
       "destination": "/tampilan-public/$1"
     }
-    ]
-  }
+  ]
+}
