@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paket - Ayik Loundrey</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="bg-glow-2"></div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="tampilan-public/index.html" class="brand" style="text-decoration: none; display: block; color: inherit; cursor: pointer;">Ayik Loundrey</a>
+            <ul class="nav-links">
+                <li class="nav-item"><a href="dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a></li>
+                <li class="nav-item"><a href="orderan.html" class="nav-link"><i data-lucide="shopping-bag"></i> Data Orderan</a></li>
+                <li class="nav-item"><a href="layanan.html" class="nav-link"><i data-lucide="layers"></i> Master Layanan</a></li>
+                <li class="nav-item"><a href="paket.html" class="nav-link active"><i data-lucide="package"></i> Master Paket</a></li>
+            </ul>
+            <button onclick="logout()" class="btn btn-danger" style="margin-top: auto"><i data-lucide="log-out"></i> Logout</button>
+        </aside>
+
+        <main class="main-content fade-in">
+            <div class="page-header">
+                <div>
+                    <h1>Master Paket</h1>
+                    <p style="color: var(--text-muted)">Manage laundry packages and duration</p>
+                </div>
+                <button class="btn" onclick="openModal()"><i data-lucide="plus"></i> Tambah Paket</button>
+            </div>
+
+            <div class="glass-card">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama Paket</th>
+                                <th>Durasi (Jam)</th>
+                                <th>Biaya Tambahan</th>
+                                <th style="text-align:right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paket-table">
+                            <tr><td colspan="5" style="text-align:center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal-overlay" id="modalPaket">
+        <div class="glass-card modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Tambah Paket</h3>
+                <button class="close-btn" onclick="closeModal()"><i data-lucide="x"></i></button>
+            </div>
+            <form id="formPaket">
+                <input type="hidden" id="id_paket">
+                <div class="input-group">
+                    <label>Nama Paket</label>
+                    <input type="text" id="nama_paket" required>
+                </div>
+                <div class="input-group">
+                    <label>Durasi (Jam)</label>
+                    <input type="number" id="durasi_jam" required>
+                </div>
+                <div class="input-group">
+                    <label>Biaya Tambahan (Rp)</label>
+                    <input type="number" id="biaya_tambahan" required>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:1rem">
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">Batal</button>
+                    <button type="submit" class="btn">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        lucide.createIcons();
+        const modal = document.getElementById('modalPaket');
+        const form = document.getElementById('formPaket');
+
+        const openModal = (data = null) => {
+            document.getElementById('modalTitle').textContent = data ? 'Edit Paket' : 'Tambah Paket';
+            document.getElementById('id_paket').value = data ? data.id_paket : '';
+            document.getElementById('nama_paket').value = data ? data.nama_paket : '';
+            document.getElementById('durasi_jam').value = data ? data.durasi_jam : '';
+            document.getElementById('biaya_tambahan').value = data ? data.biaya_tambahan : '';
+            modal.classList.add('active');
+        };
+
+        const closeModal = () => modal.classList.remove('active');
+
+        const loadData = async () => {
+            const tbody = document.getElementById('paket-table');
+            try {
+                const res = await fetchAPI('/paket');
+                if (res.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Tidak ada data</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = res.data.map(item => `
+                    <tr>
+                        <td>#${item.id_paket}</td>
+                        <td style="font-weight:500">${item.nama_paket}</td>
+                        <td>${item.durasi_jam} Jam</td>
+                        <td>Rp ${item.biaya_tambahan.toLocaleString()}</td>
+                        <td style="text-align:right">
+                            <button class="btn" style="padding:0.5rem; background:rgba(59,130,246,0.2)" onclick='openModal(${JSON.stringify(item)})'><i data-lucide="edit-2" style="width:16px;height:16px"></i></button>
+                            <button class="btn btn-danger" style="padding:0.5rem" onclick="deleteData(${item.id_paket})"><i data-lucide="trash-2" style="width:16px;height:16px"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+                lucide.createIcons();
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        const deleteData = async (id) => {
+            if(!confirm('Yakin ingin menghapus paket ini?')) return;
+            try {
+                await fetchAPI(`/paket/${id}`, { method: 'DELETE' });
+                loadData();
+            } catch (err) { alert(err.message); }
+        };
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('id_paket').value;
+            const payload = {
+                nama_paket: document.getElementById('nama_paket').value,
+                durasi_jam: parseInt(document.getElementById('durasi_jam').value),
+                biaya_tambahan: parseInt(document.getElementById('biaya_tambahan').value)
+            };
+
+            try {
+                if (id) {
+                    await fetchAPI(`/paket/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+                } else {
+                    await fetchAPI('/paket', { method: 'POST', body: JSON.stringify(payload) });
+                }
+                closeModal();
+                loadData();
+            } catch (err) { alert(err.message); }
+        });
+
+        loadData();
+    </script>
+</body>
+</html>

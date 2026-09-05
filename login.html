@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayik Loundrey - Admin Login</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="bg-glow-2"></div>
+
+    <div class="auth-container">
+        <div class="auth-box glass-card fade-in">
+            <div class="auth-header">
+                <h1>Ayik Loundrey</h1>
+                <p style="color: var(--text-muted)">Login to Admin Dashboard</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="username" placeholder="Enter username" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="Enter password" required>
+                </div>
+
+                <div id="error-msg" style="color: var(--danger); margin-bottom: 1rem; display: none; font-size: 0.9rem;"></div>
+
+                <button type="submit" class="btn" style="width: 100%; margin-bottom: 1.5rem;">
+                    <i data-lucide="log-in"></i>
+                    Sign In
+                </button>
+
+                <div style="text-align: center;">
+                    <a href="tampilan-public/index.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: color 0.3s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                        <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i> Kembali ke Halaman Utama
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        lucide.createIcons();
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error-msg');
+            const btn = e.target.querySelector('button');
+
+            try {
+                btn.innerHTML = '<i data-lucide="loader" class="spin"></i> Signing in...';
+                lucide.createIcons();
+                
+                const response = await fetchAPI('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.status === 'success') {
+                    setToken(response.data.token);
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (err) {
+                errorMsg.textContent = err.message || 'Login failed';
+                errorMsg.style.display = 'block';
+                btn.innerHTML = '<i data-lucide="log-in"></i> Sign In';
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Admin {
+  id       Int    @id @default(autoincrement())
+  username String @unique(map: "username")
+  password String
+
+  @@map("admin")
+}
+
+model Layanan {
+  id_layanan   Int       @id @default(autoincrement())
+  nama_layanan String
+  harga_per_kg Int
+  orderan      Orderan[]
+
+  @@map("layanan")
+}
+
+model Paket {
+  id_paket       Int       @id @default(autoincrement())
+  nama_paket     String
+  durasi_jam     Int
+  biaya_tambahan Int
+  orderan        Orderan[]
+
+  @@map("paket")
+}
+
+model Orderan {
+  id_orderan       Int         @id @default(autoincrement())
+  nama_pelanggan   String
+  berat_laundry    Decimal
+  id_layanan       Int
+  id_paket         Int
+  status           OrderStatus @default(Diproses)
+  waktu_masuk      DateTime
+  estimasi_selesai DateTime
+  total_harga      Int
+  layanan          Layanan     @relation(fields: [id_layanan], references: [id_layanan], onUpdate: Restrict, map: "orderan_ibfk_1")
+  paket            Paket       @relation(fields: [id_paket], references: [id_paket], onUpdate: Restrict, map: "orderan_ibfk_2")
+
+  @@index([id_layanan], map: "id_layanan")
+  @@index([id_paket], map: "id_paket")
+  @@map("orderan")
+}
+
+enum OrderStatus {
+  Diproses
+  Selesai
+}

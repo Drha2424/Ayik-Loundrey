@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LaundryKu - Bersih, Cepat, Tanpa Ribet</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                Ayik Loundrey
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <div class="hero-card">
+            <div class="circle-1"></div>
+            <div class="circle-2"></div>
+            <h1>Bersih, Cepat,<br>Tanpa Ribet.</h1>
+            <p>Cepat • Wangi • Tepat Waktu</p>
+            <button class="btn-white" onclick="document.getElementById('cek-pesanan').scrollIntoView({ behavior: 'smooth' })">
+                Lihat Pesanan <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+            </button>
+        </div>
+
+        <!-- Paket Laundry Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i data-lucide="package" style="color: var(--primary);"></i> Paket Laundry
+                </h2>
+            </div>
+            <div class="scroll-container" id="paket-container">
+                <!-- Injected via JS -->
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Memuat data paket...</div>
+            </div>
+        </section>
+
+        <!-- Layanan Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i data-lucide="shopping-basket" style="color: var(--primary);"></i> Layanan
+                </h2>
+            </div>
+            <div class="layanan-list" id="layanan-container">
+                <!-- Injected via JS -->
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Memuat data layanan...</div>
+            </div>
+        </section>
+
+        <!-- Order Saya Section -->
+        <section class="section" id="cek-pesanan">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i data-lucide="clipboard-list" style="color: var(--primary);"></i> Cek Pesanan
+                </h2>
+            </div>
+            <div class="order-list" id="orderan-container">
+                <!-- Injected via JS -->
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">Memuat data pesanan...</div>
+            </div>
+        </section>
+
+        <!-- Location Card -->
+        <div class="map-card">
+            <!-- Simplified Map Background (Icon) -->
+            <i data-lucide="map" class="map-bg" style="color: #bae6fd; width: 120px; height: 120px;"></i>
+            
+            <div class="map-info">
+                <h4><i data-lucide="map-pin" style="width:16px;height:16px" fill="currentColor" color="white"></i> Lokasi Ayik Loundrey</h4>
+                <p>Jl. Raya Pembangunan No. 10, Jakarta</p>
+                
+                <h4><i data-lucide="clock" style="width:16px;height:16px"></i> Jam Operasional</h4>
+                <p>08.00 - 20.00 WIB (Setiap Hari)</p>
+            </div>
+            <a href="#" class="btn-map">
+                <i data-lucide="map" style="width:18px;height:18px"></i> Buka Google Maps
+            </a>
+        </div>
+
+        <div class="footer-text">
+            &copy; 2026 Ayik Loundrey. All rights reserved.
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

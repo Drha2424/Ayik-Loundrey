@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Orderan - Ayik Loundrey</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="bg-glow-2"></div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="tampilan-public/index.html" class="brand" style="text-decoration: none; display: block; color: inherit; cursor: pointer;">Ayik Loundrey</a>
+            <ul class="nav-links">
+                <li class="nav-item"><a href="dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a></li>
+                <li class="nav-item"><a href="orderan.html" class="nav-link active"><i data-lucide="shopping-bag"></i> Data Orderan</a></li>
+                <li class="nav-item"><a href="layanan.html" class="nav-link"><i data-lucide="layers"></i> Master Layanan</a></li>
+                <li class="nav-item"><a href="paket.html" class="nav-link"><i data-lucide="package"></i> Master Paket</a></li>
+            </ul>
+            <button onclick="logout()" class="btn btn-danger" style="margin-top: auto"><i data-lucide="log-out"></i> Logout</button>
+        </aside>
+
+        <main class="main-content fade-in">
+            <div class="page-header">
+                <div>
+                    <h1>Data Orderan</h1>
+                    <p style="color: var(--text-muted)">Manage customer laundry orders</p>
+                </div>
+                <button class="btn" onclick="openModal()"><i data-lucide="plus"></i> Tambah Order</button>
+            </div>
+
+            <div class="glass-card">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Pelanggan</th>
+                                <th>Layanan & Paket</th>
+                                <th>Berat / Jumlah</th>
+                                <th>Total Harga</th>
+                                <th>Status</th>
+                                <th style="text-align:right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderan-table">
+                            <tr><td colspan="7" style="text-align:center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal-overlay" id="modalOrderan">
+        <div class="glass-card modal" style="max-width: 600px">
+            <div class="modal-header">
+                <h3 id="modalTitle">Tambah Orderan</h3>
+                <button class="close-btn" onclick="closeModal()"><i data-lucide="x"></i></button>
+            </div>
+            <form id="formOrderan">
+                <input type="hidden" id="id_orderan">
+                
+                <div class="input-group">
+                    <label>Nama Pelanggan</label>
+                    <input type="text" id="nama_pelanggan" required>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem">
+                    <div class="input-group">
+                        <label>Layanan</label>
+                        <select id="id_layanan" required onchange="calculateTotal()"></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Paket</label>
+                        <select id="id_paket" required onchange="calculateTotal()"></select>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label id="label_berat">Berat Laundry (Kg)</label>
+                    <input type="number" step="0.1" id="berat_laundry" required oninput="calculateTotal()">
+                </div>
+
+                <div class="input-group" id="status-group" style="display:none">
+                    <label>Status</label>
+                    <select id="status">
+                        <option value="Diproses">Diproses</option>
+                        <option value="Selesai">Selesai</option>
+                    </select>
+                </div>
+
+                <div class="glass-card" style="padding:1rem; margin-bottom:1.5rem; background:rgba(0,0,0,0.2)">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem">
+                        <span style="color:var(--text-muted)">Estimasi Selesai:</span>
+                        <strong id="estimasi_selesai_text">-</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:1.2rem">
+                        <span style="color:var(--text-muted)">Total Harga:</span>
+                        <strong id="total_harga_text" style="color:var(--primary)">Rp 0</strong>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:1rem">
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">Batal</button>
+                    <button type="submit" class="btn">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        lucide.createIcons();
+        const modal = document.getElementById('modalOrderan');
+        const form = document.getElementById('formOrderan');
+        let layananList = [];
+        let paketList = [];
+        let calculatedTotal = 0;
+        let calculatedEstimasi = null;
+
+        const initForm = async () => {
+            try {
+                const [resLayanan, resPaket] = await Promise.all([
+                    fetchAPI('/layanan'),
+                    fetchAPI('/paket')
+                ]);
+                layananList = resLayanan.data;
+                paketList = resPaket.data;
+
+                document.getElementById('id_layanan').innerHTML = '<option value="">Pilih Layanan</option>' + 
+                    layananList.map(l => {
+                        const unit = l.nama_layanan.toLowerCase() === 'lain lain' ? 'pcs' : 'kg';
+                        return `<option value="${l.id_layanan}">${l.nama_layanan} - Rp${l.harga_per_kg}/${unit}</option>`;
+                    }).join('');
+                
+                document.getElementById('id_paket').innerHTML = '<option value="">Pilih Paket</option>' + 
+                    paketList.map(p => `<option value="${p.id_paket}">${p.nama_paket} (${p.durasi_jam} Jam)</option>`).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        const calculateTotal = () => {
+            const layananId = document.getElementById('id_layanan').value;
+            const paketId = document.getElementById('id_paket').value;
+            const berat = parseFloat(document.getElementById('berat_laundry').value) || 0;
+
+            const layanan = layananList.find(l => l.id_layanan == layananId);
+            const paket = paketList.find(p => p.id_paket == paketId);
+
+            if (layanan) {
+                const isPcs = layanan.nama_layanan.toLowerCase() === 'lain lain';
+                document.getElementById('label_berat').textContent = isPcs ? 'Jumlah (Pcs)' : 'Berat Laundry (Kg)';
+            }
+
+            if (layanan && paket && berat > 0) {
+                calculatedTotal = (layanan.harga_per_kg + paket.biaya_tambahan) * berat;
+                document.getElementById('total_harga_text').textContent = `Rp ${calculatedTotal.toLocaleString()}`;
+
+                // Calculate estimasi
+                const now = new Date();
+                now.setHours(now.getHours() + paket.durasi_jam);
+                calculatedEstimasi = now.toISOString();
+                document.getElementById('estimasi_selesai_text').textContent = now.toLocaleString('id-ID');
+            } else {
+                calculatedTotal = 0;
+                calculatedEstimasi = null;
+                document.getElementById('total_harga_text').textContent = 'Rp 0';
+                document.getElementById('estimasi_selesai_text').textContent = '-';
+            }
+        };
+
+        const openModal = (data = null) => {
+            document.getElementById('modalTitle').textContent = data ? 'Edit Orderan' : 'Tambah Orderan';
+            document.getElementById('id_orderan').value = data ? data.id_orderan : '';
+            document.getElementById('nama_pelanggan').value = data ? data.nama_pelanggan : '';
+            document.getElementById('id_layanan').value = data ? data.id_layanan : '';
+            document.getElementById('id_paket').value = data ? data.id_paket : '';
+            document.getElementById('berat_laundry').value = data ? data.berat_laundry : '';
+            
+            const statusGroup = document.getElementById('status-group');
+            if (data) {
+                statusGroup.style.display = 'block';
+                document.getElementById('status').value = data.status;
+                calculatedTotal = data.total_harga;
+                calculatedEstimasi = data.estimasi_selesai;
+                document.getElementById('total_harga_text').textContent = `Rp ${data.total_harga.toLocaleString()}`;
+                document.getElementById('estimasi_selesai_text').textContent = new Date(data.estimasi_selesai).toLocaleString('id-ID');
+            } else {
+                statusGroup.style.display = 'none';
+                calculateTotal();
+            }
+            modal.classList.add('active');
+        };
+
+        const closeModal = () => modal.classList.remove('active');
+
+        const loadData = async () => {
+            const tbody = document.getElementById('orderan-table');
+            try {
+                const res = await fetchAPI('/orderan');
+                if (res.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">Tidak ada data</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = res.data.map(item => `
+                    <tr>
+                        <td>#${item.id_orderan}</td>
+                        <td style="font-weight:500">${item.nama_pelanggan}</td>
+                        <td>${item.layanan.nama_layanan} - ${item.paket.nama_paket}</td>
+                        <td>${item.berat_laundry} ${item.layanan.nama_layanan.toLowerCase() === 'lain lain' ? 'Pcs' : 'Kg'}</td>
+                        <td>Rp ${item.total_harga.toLocaleString()}</td>
+                        <td>
+                            <span class="status-badge ${item.status === 'Selesai' ? 'status-selesai' : 'status-proses'}">
+                                ${item.status}
+                            </span>
+                        </td>
+                        <td style="text-align:right">
+                            <button class="btn" style="padding:0.5rem; background:rgba(59,130,246,0.2)" onclick='openModal(${JSON.stringify(item)})'><i data-lucide="edit-2" style="width:16px;height:16px"></i></button>
+                            <button class="btn btn-danger" style="padding:0.5rem" onclick="deleteData(${item.id_orderan})"><i data-lucide="trash-2" style="width:16px;height:16px"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+                lucide.createIcons();
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        const deleteData = async (id) => {
+            if(!confirm('Yakin ingin menghapus orderan ini?')) return;
+            try {
+                await fetchAPI(`/orderan/${id}`, { method: 'DELETE' });
+                loadData();
+            } catch (err) { alert(err.message); }
+        };
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('id_orderan').value;
+            const payload = {
+                nama_pelanggan: document.getElementById('nama_pelanggan').value,
+                id_layanan: parseInt(document.getElementById('id_layanan').value),
+                id_paket: parseInt(document.getElementById('id_paket').value),
+                berat_laundry: parseFloat(document.getElementById('berat_laundry').value),
+                total_harga: calculatedTotal
+            };
+
+            if (id) {
+                payload.status = document.getElementById('status').value;
+            } else {
+                payload.waktu_masuk = new Date().toISOString();
+                payload.estimasi_selesai = calculatedEstimasi;
+            }
+
+            try {
+                if (id) {
+                    await fetchAPI(`/orderan/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+                } else {
+                    await fetchAPI('/orderan', { method: 'POST', body: JSON.stringify(payload) });
+                }
+                closeModal();
+                loadData();
+            } catch (err) { alert(err.message); }
+        });
+
+        initForm();
+        loadData();
+    </script>
+</body>
+</html>

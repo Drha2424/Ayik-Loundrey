@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layanan - Ayik Loundrey</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="bg-glow-2"></div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="tampilan-public/index.html" class="brand" style="text-decoration: none; display: block; color: inherit; cursor: pointer;">Ayik Loundrey</a>
+            <ul class="nav-links">
+                <li class="nav-item"><a href="dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a></li>
+                <li class="nav-item"><a href="orderan.html" class="nav-link"><i data-lucide="shopping-bag"></i> Data Orderan</a></li>
+                <li class="nav-item"><a href="layanan.html" class="nav-link active"><i data-lucide="layers"></i> Master Layanan</a></li>
+                <li class="nav-item"><a href="paket.html" class="nav-link"><i data-lucide="package"></i> Master Paket</a></li>
+            </ul>
+            <button onclick="logout()" class="btn btn-danger" style="margin-top: auto"><i data-lucide="log-out"></i> Logout</button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content fade-in">
+            <div class="page-header">
+                <div>
+                    <h1>Master Layanan</h1>
+                    <p style="color: var(--text-muted)">Manage laundry services and prices</p>
+                </div>
+                <button class="btn" onclick="openModal()"><i data-lucide="plus"></i> Tambah Layanan</button>
+            </div>
+
+            <div class="glass-card">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama Layanan</th>
+                                <th>Harga / Kg</th>
+                                <th style="text-align:right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="layanan-table">
+                            <tr><td colspan="4" style="text-align:center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal-overlay" id="modalLayanan">
+        <div class="glass-card modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Tambah Layanan</h3>
+                <button class="close-btn" onclick="closeModal()"><i data-lucide="x"></i></button>
+            </div>
+            <form id="formLayanan">
+                <input type="hidden" id="id_layanan">
+                <div class="input-group">
+                    <label>Nama Layanan</label>
+                    <input type="text" id="nama_layanan" required>
+                </div>
+                <div class="input-group">
+                    <label>Harga per Kg (Rp)</label>
+                    <input type="number" id="harga_per_kg" required>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:1rem">
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">Batal</button>
+                    <button type="submit" class="btn">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        lucide.createIcons();
+        const modal = document.getElementById('modalLayanan');
+        const form = document.getElementById('formLayanan');
+
+        const openModal = (data = null) => {
+            document.getElementById('modalTitle').textContent = data ? 'Edit Layanan' : 'Tambah Layanan';
+            document.getElementById('id_layanan').value = data ? data.id_layanan : '';
+            document.getElementById('nama_layanan').value = data ? data.nama_layanan : '';
+            document.getElementById('harga_per_kg').value = data ? data.harga_per_kg : '';
+            modal.classList.add('active');
+        };
+
+        const closeModal = () => modal.classList.remove('active');
+
+        const loadData = async () => {
+            const tbody = document.getElementById('layanan-table');
+            try {
+                const res = await fetchAPI('/layanan');
+                if (res.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Tidak ada data</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = res.data.map(item => `
+                    <tr>
+                        <td>#${item.id_layanan}</td>
+                        <td style="font-weight:500">${item.nama_layanan}</td>
+                        <td>Rp ${item.harga_per_kg.toLocaleString()}</td>
+                        <td style="text-align:right">
+                            <button class="btn" style="padding:0.5rem; background:rgba(59,130,246,0.2)" onclick='openModal(${JSON.stringify(item)})'><i data-lucide="edit-2" style="width:16px;height:16px"></i></button>
+                            <button class="btn btn-danger" style="padding:0.5rem" onclick="deleteData(${item.id_layanan})"><i data-lucide="trash-2" style="width:16px;height:16px"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+                lucide.createIcons();
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        const deleteData = async (id) => {
+            if(!confirm('Yakin ingin menghapus layanan ini?')) return;
+            try {
+                await fetchAPI(`/layanan/${id}`, { method: 'DELETE' });
+                loadData();
+            } catch (err) { alert(err.message); }
+        };
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('id_layanan').value;
+            const payload = {
+                nama_layanan: document.getElementById('nama_layanan').value,
+                harga_per_kg: parseInt(document.getElementById('harga_per_kg').value)
+            };
+
+            try {
+                if (id) {
+                    await fetchAPI(`/layanan/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+                } else {
+                    await fetchAPI('/layanan', { method: 'POST', body: JSON.stringify(payload) });
+                }
+                closeModal();
+                loadData();
+            } catch (err) { alert(err.message); }
+        });
+
+        loadData();
+    </script>
+</body>
+</html>

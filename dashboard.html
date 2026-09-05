@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Ayik Loundrey</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="bg-glow-2"></div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar fade-in">
+            <a href="tampilan-public/index.html" class="brand" style="text-decoration: none; display: block; color: inherit; cursor: pointer;">Ayik Loundrey</a>
+            <ul class="nav-links">
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link active">
+                        <i data-lucide="layout-dashboard"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="orderan.html" class="nav-link">
+                        <i data-lucide="shopping-bag"></i> Data Orderan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="layanan.html" class="nav-link">
+                        <i data-lucide="layers"></i> Master Layanan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="paket.html" class="nav-link">
+                        <i data-lucide="package"></i> Master Paket
+                    </a>
+                </li>
+            </ul>
+            <button onclick="logout()" class="btn btn-danger" style="margin-top: auto">
+                <i data-lucide="log-out"></i> Logout
+            </button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content fade-in" style="animation-delay: 0.1s">
+            <div class="page-header">
+                <div>
+                    <h1>Overview</h1>
+                    <p style="color: var(--text-muted)">Welcome back to admin dashboard</p>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                <div class="glass-card">
+                    <div style="color: var(--text-muted); margin-bottom: 0.5rem">Total Layanan</div>
+                    <h2 id="total-layanan" style="font-size: 2.5rem">-</h2>
+                </div>
+                <div class="glass-card">
+                    <div style="color: var(--text-muted); margin-bottom: 0.5rem">Total Paket</div>
+                    <h2 id="total-paket" style="font-size: 2.5rem">-</h2>
+                </div>
+                <div class="glass-card">
+                    <div style="color: var(--text-muted); margin-bottom: 0.5rem">Total Orderan (Diproses)</div>
+                    <h2 id="total-orderan" style="font-size: 2.5rem; color: var(--primary)">-</h2>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="glass-card">
+                <h3 style="margin-bottom: 1.5rem">Recent Orders</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Pelanggan</th>
+                                <th>Layanan & Paket</th>
+                                <th>Total Harga</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-orders-table">
+                            <tr><td colspan="4" style="text-align:center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        lucide.createIcons();
+
+        async function loadDashboard() {
+            try {
+                const [layanan, paket, orderan] = await Promise.all([
+                    fetchAPI('/layanan'),
+                    fetchAPI('/paket'),
+                    fetchAPI('/orderan')
+                ]);
+
+                document.getElementById('total-layanan').textContent = layanan.data.length;
+                document.getElementById('total-paket').textContent = paket.data.length;
+                
+                const activeOrders = orderan.data.filter(o => o.status === 'Diproses');
+                document.getElementById('total-orderan').textContent = activeOrders.length;
+
+                // Load recent 5 orders
+                const recent = orderan.data.slice(-5).reverse();
+                const tbody = document.getElementById('recent-orders-table');
+                
+                if (recent.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No recent orders</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = recent.map(o => `
+                    <tr>
+                        <td style="font-weight: 500">${o.nama_pelanggan}</td>
+                        <td>${o.layanan.nama_layanan} - ${o.paket.nama_paket}</td>
+                        <td>Rp ${o.total_harga.toLocaleString()}</td>
+                        <td>
+                            <span class="status-badge ${o.status === 'Selesai' ? 'status-selesai' : 'status-proses'}">
+                                ${o.status}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+                
+            } catch (err) {
+                console.error('Failed to load dashboard', err);
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
