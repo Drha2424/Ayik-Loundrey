@@ -1,4 +1,6 @@
-const API_URL = '/api';
+const API_URL = window.location.origin.includes('http') && !window.location.origin.includes('localhost')
+  ? '/api'
+  : 'http://localhost:3000/api';
 
 lucide.createIcons();
 

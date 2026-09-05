@@ -3,8 +3,8 @@ import pinoHttp from 'pino-http';
 import cors from 'cors';
 import 'dotenv/config';
 
-import logger from './backend/configs/logger.config.js';
-import router from './backend/routes/index.route.js';
+import logger from './configs/logger.config.js';
+import router from './routes/index.route.js';
 
 const app = express();
 const port = process.env.PORT || 3000;

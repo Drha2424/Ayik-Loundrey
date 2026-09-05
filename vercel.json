@@ -1,21 +1,51 @@
 {
   "version": 2,
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/index.js"
+      "src": "backend/index.js",
+      "use": "@vercel/node"
     },
     {
-      "source": "/dashboard",
-      "destination": "/dashboard.html"
+      "src": "tampilan-public/**",
+      "use": "@vercel/static"
     },
     {
-      "source": "/login",
-      "destination": "/login.html"
+      "src": "css/**",
+      "use": "@vercel/static"
     },
     {
-      "source": "/(.*)",
-      "destination": "/tampilan-public/$1"
+      "src": "js/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "admin/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/backend/index.js"
+    },
+    {
+      "src": "/css/(.*)",
+      "dest": "/css/$1"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/js/$1"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/dashboard.html"
+    },
+    {
+      "src": "/login",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/tampilan-public/$1"
     }
   ]
 }
