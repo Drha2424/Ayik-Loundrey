@@ -6,8 +6,16 @@
       "destination": "/index.js"
     },
     {
-      "source": "/",
-      "destination": "/tampilan-public/index.html"
+      "source": "/dashboard",
+      "destination": "/dashboard.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/tampilan-public/$1"
     }
   ]
 }
