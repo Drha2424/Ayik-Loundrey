@@ -1,4 +1,7 @@
-const API_URL = 'http://localhost:3000/api';
+// Otomatis ganti ke '/api' di Vercel, dan 'http://localhost:3000/api' saat offline/lokal
+const API_URL = window.location.origin.includes('http') && !window.location.origin.includes('localhost')
+    ? '/api'
+    : 'http://localhost:3000/api';
 
 // Token Management
 const getToken = () => localStorage.getItem('ayik_token');
@@ -8,14 +11,14 @@ const removeToken = () => localStorage.removeItem('ayik_token');
 // Auto redirect if not logged in
 const checkAuth = () => {
     const token = getToken();
-    const isLoginPage = window.location.pathname.endsWith('login.html');
-    const isIndexPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
-    
+    const path = window.location.pathname;
+    const isLoginPage = path.endsWith('login.html') || path === '/login';
+    const isIndexPage = path.endsWith('index.html') || path === '/';
+
     if (!token && !isLoginPage && !isIndexPage) {
-        window.location.href = 'login.html';
-    } else if (token && (isLoginPage || isIndexPage)) {
-        // Option: Redirect to dashboard if trying to access login while authenticated
-        if (isLoginPage) window.location.href = 'dashboard.html';
+        window.location.href = isLoginPage ? 'login.html' : '/login.html';
+    } else if (token && isLoginPage) {
+        window.location.href = '/dashboard.html';
     }
 };
 
@@ -39,15 +42,15 @@ const fetchAPI = async (endpoint, options = {}) => {
         });
 
         const data = await response.json();
-        
+
         if (!response.ok) {
             if (response.status === 401 || response.status === 403) {
                 removeToken();
-                window.location.href = 'login.html';
+                window.location.href = '/login.html';
             }
             throw new Error(data.message || 'Something went wrong');
         }
-        
+
         return data;
     } catch (error) {
         console.error('API Error:', error);
@@ -57,5 +60,5 @@ const fetchAPI = async (endpoint, options = {}) => {
 
 const logout = () => {
     removeToken();
-    window.location.href = 'login.html';
+    window.location.href = '/login.html';
 };
